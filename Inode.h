@@ -8,6 +8,9 @@ permissions, file size, owners, and pointers to data blocks of the file contents
 
 #include <iostream>
 #include <vector>
+#include <atomic>
+
+std::atomic<uint64_t> CUR_INODE_NUM(0);
 
 enum class PERMISSIONS {
     RWX,
@@ -38,6 +41,9 @@ struct Inode {
     int link_cnt; // hard link references
 
     Inode(): permissions(3), dir_ptrs(12) {};
+
+    void free_inode();
+    void modify_permissions();
 };
 
 #endif
