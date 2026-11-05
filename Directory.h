@@ -27,7 +27,7 @@ struct Directory {
     void remove_directory_entry(std::string filename); 
 
     std::string parent_directory(); 
-
+    
     // Find the corresponding inode number value of a filename key
     // Returns inode number if filename pair exists
     // Returns -1 if not filename not found
