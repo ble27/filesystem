@@ -11,6 +11,7 @@ permissions, file size, owners, and pointers to data blocks of the file contents
 #include <atomic>
 
 std::atomic<uint64_t> CUR_INODE_NUM(0);
+constexpr size_t BLOCK_SIZE = 4096;
 
 enum class PERMISSIONS {
     RWX,
@@ -20,6 +21,7 @@ enum class PERMISSIONS {
     R,
     W,
     X,
+    NONE
 };
 
 enum class FILE_TYPE {
@@ -56,21 +58,30 @@ struct Inode {
     // Hard link references
     uint8_t link_cnt; 
 
-    Inode(): permissions(3), dir_ptrs(12) {};
-    
+    Inode(): permissions(3), dir_ptrs(12) {
+        // Default permissions -rw-------
+        permissions[0] = PERMISSIONS::RW;
+        permissions[1] = PERMISSIONS::NONE;
+        permissions[2] = PERMISSIONS::NONE;
+
+        for (size_t i = 0; i < 12; ++i) {
+            dir_ptrs[i] = nullptr;
+        }
+    };
+    // Clear the contents of all pointers and mark as nullptr
+    // Reset hard link references, total block sizes, and file size
     void free_inode(Inode* inode);
-    void modify_permissions();
+
+    // IDX = 0 (USR)
+    // IDX = 1 (GRP)
+    // IDX = 2 (OTH)
+    void modify_permissions(size_t idx, PERMISSIONS permissions);
     
     // Allocate the minimum number of blocks to store a file
     // Start from direct pointers to single to double to triple indirect blocks
     void allocate_blocks();
 
-    // Count the total data blocks (file content) + index blocks (blocks that leads to data blocks)
-    uint64_t total_blocks();
-
-    // ceil(File size / 4 KiB)
-    // Implement using alignas to align as multiples of base 2
-    // FILE_SIZE = # of BYTES
+    // Align FILE_SIZE (# of BYTES) to be multiple of BLOCK_SIZE
     // For example, 1024 Bytes if 1 KiB, 4096 if 4 KiB
     uint64_t data_blocks_needed(uint64_t FILE_SIZE);
 };
