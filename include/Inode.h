@@ -10,7 +10,7 @@ permissions, file size, owners, and pointers to data blocks of the file contents
 #include <vector>
 #include <atomic>
 
-std::atomic<uint64_t> CUR_INODE_NUM(0);
+// std::atomic<uint64_t> CUR_INODE_NUM(0);
 constexpr size_t BLOCK_SIZE = 4096;
 
 enum class PERMISSIONS {
@@ -41,7 +41,8 @@ struct Inode {
     FILE_TYPE file_type;
     uint64_t file_size = 0;
     std::vector<int*> dir_ptrs; // direct pointers
-    int total_block_size = 0;    
+    uint64_t total_blocks = 0;   // index blocks + data blocks 
+    uint64_t total_data_blocks = 0; // used by allocate_blocks() method 
 
     // Single indirect pointer
     // Each single indirect block stores 1024 pointers
@@ -79,11 +80,11 @@ struct Inode {
     
     // Allocate the minimum number of blocks to store a file
     // Start from direct pointers to single to double to triple indirect blocks
-    void allocate_blocks();
+    uint64_t allocate_blocks();
 
     // Align FILE_SIZE (# of BYTES) to be multiple of BLOCK_SIZE
     // For example, 1024 Bytes if 1 KiB, 4096 if 4 KiB
-    uint64_t data_blocks_needed(uint64_t FILE_SIZE);
+    void calculate_data_blocks(uint64_t FILE_SIZE);
 };
 
 #endif
